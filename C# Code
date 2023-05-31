@@ -1,0 +1,251 @@
+using System;
+using System.Drawing;
+using System.IO.Ports;
+using System.Media;
+using System.Windows.Forms;
+
+namespace DXArtsMenu
+{
+    public partial class Form1 : Form
+    {
+
+        SerialPort serialPort;
+        public Form1()
+        {
+
+            InitializeComponent();
+            serialPort = new SerialPort("COM6", 9600);
+            try
+            {
+                serialPort.Open();
+            }
+            catch
+
+            {
+                Console.WriteLine("Unable to open COM port - check it's not in use.");
+            }
+        }
+
+        private void buttonOff_Click(object sender, EventArgs e)
+        {
+            if (serialPort.IsOpen)
+            {
+                serialPort.Write("0");
+            }
+        }
+
+        private void buttonOn_Click(object sender, EventArgs e)
+        {
+            if (serialPort.IsOpen)
+            {
+                serialPort.Write("1");
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            cmbArduinoPort.DataSource = SerialPort.GetPortNames();
+
+        }
+
+        private void Connect_Click(object sender, EventArgs e)
+        {
+            groupBox1.Visible = true;
+            tabControl1.Visible = true;
+            progressBar1.Visible = true;
+            radioButton1.Checked = true;
+            label4.Visible = true;
+            Connect.Visible = false;
+
+            CuCost.Visible = true;
+            label5.Visible = true;
+
+            SoundPlayer sound = new SoundPlayer("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\breathing.wav");
+            sound.PlayLooping();
+            try
+            {
+                ArduinoserialPort1.PortName = cmbArduinoPort.Text;
+                ArduinoserialPort1.Open();
+                if (ArduinoserialPort1.IsOpen == true)
+                {
+                    label2.Text = "Connected";
+                }
+            }
+            catch (Exception ex)
+            {
+                label2.Text = "Disconnect";
+                MessageBox.Show("Error:" + ex.ToString(), "Error");
+            }
+
+        }
+
+        private void LedOn_Click(object sender, EventArgs e)
+        {
+            ArduinoserialPort1.Write("H");
+            //ArduinoserialPort1.Write("1");
+            lblLED.Text = "LED On";
+
+        }
+
+        private void LedOff_Click(object sender, EventArgs e)
+        {
+            ArduinoserialPort1.Write("L");
+            //ArduinoserialPort1.Write("2");
+            lblLED.Text = "LED Off";
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            label4.Text = "Please Keep buying";
+            ItemName.Text = "Generative Artwork";
+            ItemDesc.Text = "Everything you will ever need is now automated! Just don't ask where it came from!";
+            pictureBox1.Image = Image.FromFile("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\Art2.png");
+        }
+
+        private void Buy_Click(object sender, EventArgs e)
+        {
+            ArduinoserialPort1.Write("H");
+            progressBar1.Value = 200;
+            timer1.Start();
+            SoundPlayer sound = new SoundPlayer("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\breathing2.wav");
+            sound.PlayLooping();
+
+            //Heart Monitor Steady
+            if (radioButton1.Checked == true)
+            {
+                trackBar1.Value += 2;
+            
+            }
+
+            if (radioButton2.Checked == true)
+            {
+                trackBar1.Value += 10;
+                
+            }
+            
+            //Heart Monitor Intensifies
+            if (radioButton3.Checked == true)
+            {
+                ArduinoserialPort1.Write("I");
+                trackBar1.Value += 15;
+        
+            }
+
+            if (radioButton4.Checked == true)
+            {
+                ArduinoserialPort1.Write("I");
+                trackBar1.Value += 30;
+            
+            }
+            if (radioButton5.Checked == true)
+            {
+                ArduinoserialPort1.Write("I");
+                trackBar1.Value += 50;
+         
+            }
+
+            //Flatline and Open Stepper to Bleed
+            if (trackBar1.Value >=100)
+            {
+                trackBar1.Value = 100;
+                Reset.Visible = true;
+                ArduinoserialPort1.Write("J");
+                ArduinoserialPort1.Write("K");
+            }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            //Timer always ticks, Trackbar value is always added to string
+            CuCost.Text = trackBar1.Value.ToString();
+            Reset.Enabled = true;
+
+            if (trackBar1.Value <= 99)
+            {
+                Reset.Visible = false;
+            }
+
+            if (progressBar1.Value <= 200)
+            {
+                progressBar1.Increment(-1);
+                if (progressBar1.Value == 0)
+                {
+                    //Reset Everything
+                    timer1.Stop();
+                    Reset.Visible = false;
+                    ArduinoserialPort1.Write("L");
+                    SoundPlayer sound = new SoundPlayer("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\breathing3.wav");
+                    sound.Play();
+                    MessageBox.Show("This merchant has expired, press ok and a replacement shall be installed", "Please Make Another Purchase");
+                    trackBar1.Value = 0;
+                    CuCost.Text = trackBar1.Value.ToString();
+                    progressBar1.Value = 200;
+                    sound = new SoundPlayer("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\breathing.wav");
+                    sound.PlayLooping();
+                }
+            }
+            else
+            {
+                progressBar1.Value = 200;
+            }
+        }
+
+        //Item Descriptors
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            label4.Text = "I cannot live without this job";
+            ItemName.Text = "Cheap Fast Fashion";
+            ItemDesc.Text = "More hours were spent creating it than you will spend wearing it! Efficient!";
+            pictureBox1.Image = Image.FromFile("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\Clothes.png");
+        }
+
+        private void radioButton3_CheckedChanged(object sender, EventArgs e)
+        {
+            label4.Text = "It's so cold";
+            ItemName.Text = "Nutrition License*";
+            ItemDesc.Text = "Your biology is marketable, Indulge yourself with the latest in Sustinance Paste! *may contain blood";
+            pictureBox1.Image = Image.FromFile("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\Food2.png");
+        }
+
+        private void radioButton4_CheckedChanged(object sender, EventArgs e)
+        {
+            label4.Text = "Hurry and keep buying";
+            ItemName.Text = "Bestla";
+            ItemDesc.Text = "Meet domestic emission standards while inducing demand for more roads at the same time! Now with 500% more lithium!";
+            pictureBox1.Image = Image.FromFile("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\Car.png");
+        }
+
+        private void radioButton5_CheckedChanged(object sender, EventArgs e)
+        {
+            label4.Text = "I want my body back";
+            ItemName.Text = "A Gorgeous Home";
+            //ItemDesc.Text = "100% organic and an infinite source of cheap labor. It cannot read, write, or posseses a sense of self, how lovely!";
+            ItemDesc.Text = "We displaced countless struggling families and gentrified the neighborhood so you may have your dream house.";
+            pictureBox1.Image = Image.FromFile("C:\\Users\\svenc\\OneDrive\\Desktop\\DXARTSIMAGES\\House.png");
+        }
+
+        private void label6_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Reset_Click(object sender, EventArgs e)
+        {
+            //Stop Stepper bleeding, Reset Cumulative cost, Impact merchant lifeline
+            trackBar1.Value = 0;
+            ArduinoserialPort1.Write("L");
+            //ArduinoserialPort1.Write("K");
+            progressBar1.Increment(-30);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ArduinoserialPort1.Write("K");
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            ArduinoserialPort1.Write("L");
+        }
+    }
+}
