@@ -1,0 +1,183 @@
+#include <SoftwareSerial.h>
+#define STEPPER_PIN_1 14 //Analog In Pins are the only ones that work A0-A3
+#define STEPPER_PIN_2 15
+#define STEPPER_PIN_3 16
+#define STEPPER_PIN_4 17
+int step_number = 0;
+
+SoftwareSerial XBee(2, 3); // RX, TX
+
+int indata;
+int speaker = 8; //Speaker connected to Digital Pin 10
+int freq = 600;
+bool Heart = false;
+bool Heart2 = false;
+bool Heart3 = false;
+bool Bleed = false;
+void setup()
+{
+
+  XBee.begin(9600);
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(STEPPER_PIN_1, OUTPUT);
+  pinMode(STEPPER_PIN_2, OUTPUT);
+  pinMode(STEPPER_PIN_3, OUTPUT);
+  pinMode(STEPPER_PIN_4, OUTPUT);
+}
+
+void loop()
+{
+  if (XBee.available())
+  {
+
+  indata = XBee.read();
+  Serial.print (indata);
+
+switch (indata) {
+    case 72:  // H
+      digitalWrite(13, HIGH);
+      Heart = true;
+      Heart2 = false;
+      Heart3 = false;
+      break;
+    case 76:  // L
+      digitalWrite(13, LOW);
+      Heart = false;
+      Heart2 = false;
+      Heart3 = false;
+
+      if (Bleed) {
+        Bleed = false;
+                if (!Bleed) {
+        for (int a = 0; a < 800; a++) { //1000 is duration of roation
+        OneStep(false);
+        delay(2); //increments of rotation
+        }
+      }
+  
+      }
+
+      break;
+    case 73: //I
+      digitalWrite(13, HIGH);
+      Heart = false;
+      Heart2 = true;
+      Heart3 = false;
+      break;
+    case 74: //J
+      digitalWrite(13, HIGH);
+      Heart = false;
+      Heart2 = false;
+      Heart3 = true;
+      break;  
+    case 75: //K
+      digitalWrite(13, HIGH);
+      
+      if (!Bleed) {
+      Bleed = true;
+
+        if (Bleed) {
+        for (int a = 0; a < 800; a++) { //1000 is duration of roation
+        OneStep(true);
+        delay(2); //increments of rotation
+        }
+      }
+
+      }  
+      break;
+      
+  }
+  delay(1);  // delay in between reads for stability
+
+}
+  if (Heart) {
+      tone(speaker, freq); //Play a 440 Hz square wave on speaker. musical A note
+      delay(100);
+      noTone(speaker); //turn off speaker
+      delay(1000);
+  }
+  if (Heart2) {
+      tone(speaker, freq); //Play a 440 Hz square wave on speaker. musical A note
+      delay(100);
+      noTone(speaker); //turn off speaker
+      delay(500);
+  }
+  if (Heart3) {
+      delay(2);
+      tone(speaker, 500, 50); //Play a 440 Hz square wave on speaker. musical A note
+  }
+  
+  if (!Heart) {
+      noTone(speaker);
+  }
+  if (!Heart2) {
+      noTone(speaker);
+  }
+  if (!Heart3) {
+      noTone(speaker);
+  }
+}
+
+void OneStep(bool dir){
+    if(dir){
+switch(step_number){
+  case 0:
+  digitalWrite(STEPPER_PIN_1, HIGH);
+  digitalWrite(STEPPER_PIN_2, LOW);
+  digitalWrite(STEPPER_PIN_3, LOW);
+  digitalWrite(STEPPER_PIN_4, LOW);
+  break;
+  case 1:
+  digitalWrite(STEPPER_PIN_1, LOW);
+  digitalWrite(STEPPER_PIN_2, HIGH);
+  digitalWrite(STEPPER_PIN_3, LOW);
+  digitalWrite(STEPPER_PIN_4, LOW);
+  break;
+  case 2:
+  digitalWrite(STEPPER_PIN_1, LOW);
+  digitalWrite(STEPPER_PIN_2, LOW);
+  digitalWrite(STEPPER_PIN_3, HIGH);
+  digitalWrite(STEPPER_PIN_4, LOW);
+  break;
+  case 3:
+  digitalWrite(STEPPER_PIN_1, LOW);
+  digitalWrite(STEPPER_PIN_2, LOW);
+  digitalWrite(STEPPER_PIN_3, LOW);
+  digitalWrite(STEPPER_PIN_4, HIGH);
+  break;
+} 
+  }else{
+    switch(step_number){
+  case 0:
+  digitalWrite(STEPPER_PIN_1, LOW);
+  digitalWrite(STEPPER_PIN_2, LOW);
+  digitalWrite(STEPPER_PIN_3, LOW);
+  digitalWrite(STEPPER_PIN_4, HIGH);
+  break;
+  case 1:
+  digitalWrite(STEPPER_PIN_1, LOW);
+  digitalWrite(STEPPER_PIN_2, LOW);
+  digitalWrite(STEPPER_PIN_3, HIGH);
+  digitalWrite(STEPPER_PIN_4, LOW);
+  break;
+  case 2:
+  digitalWrite(STEPPER_PIN_1, LOW);
+  digitalWrite(STEPPER_PIN_2, HIGH);
+  digitalWrite(STEPPER_PIN_3, LOW);
+  digitalWrite(STEPPER_PIN_4, LOW);
+  break;
+  case 3:
+  digitalWrite(STEPPER_PIN_1, HIGH);
+  digitalWrite(STEPPER_PIN_2, LOW);
+  digitalWrite(STEPPER_PIN_3, LOW);
+  digitalWrite(STEPPER_PIN_4, LOW);
+  
+} 
+  }
+step_number++;
+  if(step_number > 3){
+    step_number = 0;
+  }
+}
